@@ -92,7 +92,7 @@ export default function ComparisonHistory() {
         <div className="flex items-center gap-3">
           <div className="w-1.5 h-6 bg-emerald-500 rounded-full"></div>
           <h1 className="text-xl font-bold text-slate-800 tracking-tight">
-            설비 상태 이력 조회 (TanStack)
+            설비 상태 이력 조회 (TanStack + shadcn)
           </h1>
         </div>
         <div className="flex items-center gap-4">
