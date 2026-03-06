@@ -143,18 +143,25 @@ export default function HistoryGrid({
         },
       },
       {
-        field: "eqpId",
-        headerName: "설비 ID",
-        width: 110,
-        editable: true,
-        cellClass: "font-semibold text-slate-600",
-      },
-      {
-        field: "eqpName",
-        headerName: "설비명",
-        width: 130,
-        editable: true,
-      },
+      headerName: "설비 상세 정보",
+      headerClass: "header-group-center",
+      marryChildren: true,
+      children: [ 
+        {
+          field: "eqpId",
+          headerName: "설비 ID",
+          width: 110,
+          editable: true,
+          cellClass: "font-semibold text-slate-600",
+        },
+        {
+          field: "eqpName",
+          headerName: "설비명",
+          width: 130,
+          editable: true,
+        },
+      ],
+    },
       {
         field: "process",
         headerName: "공정",

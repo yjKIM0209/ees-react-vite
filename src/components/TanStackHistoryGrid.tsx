@@ -74,24 +74,30 @@ export default function TanStackHistoryGrid({
       columnHelper.accessor("process", { header: "공정", minSize: 100 }),
       columnHelper.accessor("factory", { header: "공장", minSize: 100 }),
       columnHelper.accessor("area", { header: "작업 구역", minSize: 120 }),
-      columnHelper.accessor("eqpId", {
-        header: "설비 ID",
-        minSize: 120,
-        cell: (info) => (
-          <span className="font-semibold text-slate-700 whitespace-nowrap">
-            {info.getValue()}
-          </span>
-        ),
-      }),
-      columnHelper.accessor("eqpName", {
-        header: "설비명",
-        minSize: 150,
-        cell: (info) => (
-          <EditableCell
-            value={info.getValue()}
-            onUpdate={(val) => onUpdateRow(info.row.index, "eqpName", val)}
-          />
-        ),
+      columnHelper.group({
+        id: "equipment_group",
+        header: "설비 상세 정보",
+        columns: [
+          columnHelper.accessor("eqpId", {
+            header: "설비 ID",
+            minSize: 120,
+            cell: (info) => (
+              <span className="font-semibold text-slate-700 whitespace-nowrap">
+                {info.getValue()}
+              </span>
+            ),
+          }),
+          columnHelper.accessor("eqpName", {
+            header: "설비명",
+            minSize: 150,
+            cell: (info) => (
+              <EditableCell
+                value={info.getValue()}
+                onUpdate={(val) => onUpdateRow(info.row.index, "eqpName", val)}
+              />
+            ),
+          }),
+        ],
       }),
       columnHelper.accessor("startTime", {
         header: "시작 시간",
@@ -202,19 +208,22 @@ export default function TanStackHistoryGrid({
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-4 py-3 font-semibold text-slate-600 cursor-pointer hover:bg-slate-100 transition-colors select-none whitespace-nowrap"
+                      colSpan={header.colSpan}
+                      className="px-4 py-3 font-semibold text-slate-600 cursor-pointer hover:bg-slate-100 transition-colors select-none whitespace-nowrap "
                       onClick={header.column.getToggleSortingHandler()}
                       style={{ width: header.getSize() }}
                     >
-                      <div className="flex items-center gap-2">
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                        {{ asc: " 🔼", desc: " 🔽" }[
-                          header.column.getIsSorted() as string
-                        ] ?? null}
-                      </div>
+                      {!header.isPlaceholder && (
+                        <div className="flex items-center gap-2">
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                          {{ asc: " 🔼", desc: " 🔽" }[
+                            header.column.getIsSorted() as string
+                          ] ?? null}
+                        </div>
+                      )}
                     </th>
                   ))}
                 </tr>

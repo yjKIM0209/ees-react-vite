@@ -23,3 +23,7 @@
     overflow: hidden;
   }
 }
+
+.ag-header-group-cell-label {
+  justify-content: center !important;
+}

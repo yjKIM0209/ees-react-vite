@@ -5,12 +5,16 @@ import {
   useLocation,
   type Location,
 } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Dashboard from "@/pages/Dashboard";
 import EquipmentDetail from "@/pages/EquipmentDetail";
 import EquipmentModal from "@/components/EquipmentModal";
 import EquipmentHistory from "@/pages/EquipmentHistory";
 import ComparisonHistory from "@/pages/ComparisonHistory";
 import Sidebar from "@/components/Sidebar";
+import InfiniteHistoryGrid from "@/components/InfiniteHistoryGrid";
+
+const queryClient = new QueryClient();
 
 function AppContent() {
   const location = useLocation();
@@ -26,6 +30,7 @@ function AppContent() {
           <Route path="/equipment-history" element={<EquipmentHistory />} />
           <Route path="/comparison-history" element={<ComparisonHistory />} />
           <Route path="/equipment/:id" element={<EquipmentDetail />} />
+          <Route path="/history-infinite" element={<InfiniteHistoryGrid />} />
         </Routes>
 
         {background && (
@@ -40,8 +45,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
