@@ -1,4 +1,6 @@
-# React + TypeScript + Vite
+# React + TypeScript + Vite <br/>
+https://dashboard-samples.netlify.app/
+<br/>
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
