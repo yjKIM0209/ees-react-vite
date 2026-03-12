@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "package": "npm run build && powershell -Command \"$v = (Get-Content package.json | ConvertFrom-Json).version; tar -cvf ees-react-vite.$v.tar ./dist\"",
+    "release": "npm version patch && npm run package"
   },
   "dependencies": {
     "@arction/lcjs": "^5.2.1",
