@@ -1,4 +1,4 @@
-// src/features/factory/pages/FactoryManagementPage.tsx
+// src/pages/mdm/FactoryManagementPage.tsx
 import { useState } from "react";
 import { ConfirmDialog } from "@/shared/components/modal/ConfirmDialog";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ export default function FactoryManagementPage() {
         description="해당 공장을 삭제하면 연결된 모든 설비 데이터에 접근할 수 없습니다. 정말 삭제하시겠습니까?"
         onConfirm={handleDeleteFactory}
         confirmText="삭제하기"
-        variant="success" // 빨간색 버튼으로 강조
+        variant="success"
       />
     </div>
   );
