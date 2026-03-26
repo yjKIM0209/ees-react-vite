@@ -27,11 +27,11 @@ export function ConfirmDialog({
   description,
   onConfirm,
   confirmText = "확인",
-  variant = "default",
 }: ConfirmDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-425px">
+      <DialogContent className="sm:max-w-425px bg-white border border-slate-200 shadow-xl">
+        {" "}
         <DialogHeader>
           <DialogTitle className="text-lg font-bold">{title}</DialogTitle>
           <DialogDescription className="py-2 text-slate-500">
@@ -39,11 +39,15 @@ export function ConfirmDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-2 sm:gap-0">
-          <Button className="mr-2" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            className="mr-2"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             취소
           </Button>
           <Button
-            variant={variant}
+            variant = "delete"
             onClick={() => {
               onConfirm();
               onOpenChange(false); // 실행 후 닫기

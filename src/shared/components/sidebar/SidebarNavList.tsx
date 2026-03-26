@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -14,20 +14,8 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
+import type { NavItem, NavSubItem } from "@/features/layout/types/menu";
 
-export interface NavSubItem {
-  name: string;
-  href?: string;
-  items?: NavSubItem[]; // 2단계 트리를 위한 재귀 구조
-}
-
-export interface NavItem {
-  name: string;
-  role: string[];
-  icon?: LucideIcon;
-  href?: string;
-  items?: NavSubItem[];
-}
 
 export function SidebarNavList({ items }: { items: NavItem[] }) {
   const { pathname } = useLocation();
