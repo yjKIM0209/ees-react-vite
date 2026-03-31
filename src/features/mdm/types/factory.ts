@@ -1,12 +1,12 @@
 // src/features/mdm/types/factory.ts
 import type { ColDef } from "ag-grid-community";
-import { UseYnBadge } from "../components/UseYnBadge";
+import { UseYnBadge } from "../../../shared/components/table/UseYnBadge";
 
 export interface FactoryData {
   factoryId: string;
   factoryName: string;
   division: string;
-  useYn: "Y" | "N";
+  useYn: "Valid" | "Invalid";
   description: string;
   updatedAt: string;
   updatedBy: string;
@@ -30,7 +30,8 @@ export const factoryColumnDefs: ColDef<FactoryData>[] = [
     width: 150,
     editable: true,
     cellEditor: "agSelectCellEditor",
-    cellEditorParams: { values: ["Y", "N"] },
+    cellEditorParams: { values: ["Valid", "Invalid"] },
+    valueFormatter: (params) => (params.value === "Valid" ? "유효" : "유효하지 않음"),
     cellRenderer: UseYnBadge,
   },
   { field: "description", headerName: "비고", width: 200, editable: true },
