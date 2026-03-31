@@ -51,6 +51,25 @@ export const factoryColumnDefs: ColDef<FactoryData>[] = [
     headerName: "공장 ID",
     width: 130,
     pinned: "left",
+    editable: (params) => {
+      if (!params.data) return false; 
+
+      const isNew = !params.data.creator || params.data.plantId === "";
+      return isNew;
+    },
+    cellStyle: (params) => {
+      if (!params.data) return null;
+
+      const isNew = !params.data.creator || params.data.plantId === "";
+      if (!isNew) {
+        return {
+          backgroundColor: "#f8fafc",
+          color: "#64748b",
+          cursor: "not-allowed",
+        };
+      }
+      return null;
+    },
   },
   {
     field: "plantNameKoKr",
@@ -79,6 +98,12 @@ export const factoryColumnDefs: ColDef<FactoryData>[] = [
   { field: "phone", headerName: "전화번호", width: 130, editable: true },
   { field: "address", headerName: "주소", width: 250, editable: true },
   { field: "description", headerName: "설명", width: 200, editable: true },
+  {
+    field: "startBusinessHour",
+    headerName: "시업 시간",
+    width: 150,
+    editable: true,
+  },
   {
     field: "created_time",
     headerName: "생성일시",

@@ -49,6 +49,54 @@ export default function FactoryManagementPage() {
     }
   }, [searchParams]);
 
+  const handleAddRow = useCallback(() => {
+    const newRow: FactoryData = {
+      plantId: "", // 필수값
+      plantNameKoKr: "",
+      plantNameEnUs: "",
+      plantNameZhCn: "",
+      plantNameViVn: "",
+      plantNameLoLo: "",
+      description: "",
+      enterpriseId: "",
+      address: "",
+      phone: "",
+      fax: "",
+      language: "ko-KR",
+      startBusinessHour: "09:00",
+      validState: "Valid", // 필수값 // 기본값 '유효'
+      creator: "admin", // 필요시 현재 사용자 세션 정보
+      created_time: "",
+      modifier: null,
+      modified_time: null,
+    };
+
+    setRowData((prev) => [newRow, ...prev]);
+  }, []);
+
+  const handleSave = useCallback(async () => {
+  try {
+    const newItems = rowData.filter(row => row.plantId && row.created_time === "");
+
+    if (newItems.length === 0) {
+      alert("저장할 신규 데이터가 없습니다.");
+      return;
+    }
+
+    for (const item of newItems) {
+      await factoryApi.registerPlant({
+        ...item,
+      });
+    }
+
+    alert("성공적으로 저장되었습니다.");
+    handleSearch(); 
+  } catch (error: any) {
+    console.error("저장 오류:", error);
+    alert(`저장 실패: ${error.response?.data?.message || error.message}`);
+  }
+}, [rowData, handleSearch]);
+
   const gridOptions = useMemo(
     () => ({
       quickFilterText: gridSearch,
@@ -112,9 +160,9 @@ export default function FactoryManagementPage() {
         right={
           <ActionBar
             onSearch={handleSearch}
-            onAdd={() => console.log("추가")}
+            onAdd={handleAddRow}
             onDelete={() => console.log("삭제")}
-            onSave={() => console.log("저장")}
+            onSave={handleSave}
             onExcel={() => console.log("엑셀")}
           />
         }
@@ -129,6 +177,7 @@ export default function FactoryManagementPage() {
               ...gridOptions,
               rowSelection: "multiple",
               suppressRowClickSelection: true,
+              stopEditingWhenCellsLoseFocus: true,
             }}
           />
         </div>
