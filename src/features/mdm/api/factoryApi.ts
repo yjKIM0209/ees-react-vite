@@ -39,9 +39,15 @@ export const factoryApi = {
     return response.data;
   },
 
-  // 공장 수정 API (PUT)
+  // 3. 수정 API
   updatePlant: async (params: RegisterPlantRequest) => {
     const response = await api.put("/plant", params);
+    return response.data;
+  },
+
+  // 4. 삭제 API
+  deletePlant: async (plantId: string) => {
+    const response = await api.delete("/plant", { data: { plantId } });
     return response.data;
   },
 };

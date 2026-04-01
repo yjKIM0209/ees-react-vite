@@ -23,6 +23,8 @@ export default function FactoryManagementPage() {
   // const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [gridSearch, setGridSearch] = useState("");
   const [rowData, setRowData] = useState<FactoryData[]>([]);
+  const [gridApi, setGridApi] = useState<any>(null);
+  const [deletedIds, setDeletedIds] = useState<string[]>([]);
 
   const [searchParams, setSearchParams] = useState({
     plantId: "",
@@ -75,23 +77,73 @@ export default function FactoryManagementPage() {
   }, []);
 
   const onCellValueChanged = useCallback((params: any) => {
-    if (params.data.created_time) {
+    if (!params.data.created_time) return;
+
+    const normalize = (v: unknown) =>
+      v === null || v === undefined ? "" : String(v);
+
+    const oldVal = normalize(params.oldValue);
+    const newVal = normalize(params.newValue);
+
+    if (oldVal !== newVal) {
       params.data.isUpdated = true;
     }
   }, []);
 
-  const handleSave = useCallback(async () => {
-    try {
-      const newItems = rowData.filter(
-        (row) => row.plantId && !row.created_time,
-      );
-      const updatedItems = rowData.filter(
-        (row) => (row as any).isUpdated === true,
-      );
+  const onGridReady = (params: any) => {
+    setGridApi(params.api);
+  };
 
-      if (newItems.length === 0 && updatedItems.length === 0) {
-        alert("변경사항이 없습니다.");
-        return;
+  const handleDeleteRow = useCallback(() => {
+    if (!gridApi) return;
+
+    const selectedRows = gridApi.getSelectedRows();
+    if (selectedRows.length === 0) {
+      alert("삭제할 행을 선택해주세요.");
+      return;
+    }
+
+    const idsToDelete = selectedRows
+      .filter((row: any) => row.created_time)
+      .map((row: any) => row.plantId);
+
+    setDeletedIds((prev) => [...prev, ...idsToDelete]);
+
+    const remainingRows = rowData.filter((row) => !selectedRows.includes(row));
+    setRowData(remainingRows);
+  }, [gridApi, rowData]);
+
+  const handleSave = useCallback(async () => {
+    if (!gridApi) return;
+
+    const allRows: FactoryData[] = [];
+    gridApi.forEachNode((node: any) => allRows.push(node.data));
+
+    const idsToProcess = [...deletedIds];
+    const newItems = allRows.filter((row) => !row.created_time);
+    const updatedItems = allRows.filter(
+      (row) => (row as any).isUpdated === true && row.plantId,
+    );
+
+    const invalidItems = newItems.filter((row) => !row.plantId?.trim());
+    if (invalidItems.length > 0) {
+      alert(`공장 ID는 필수값입니다. (${invalidItems.length}건)`);
+      return;
+    }
+
+    if (
+      idsToProcess.length === 0 &&
+      newItems.length === 0 &&
+      updatedItems.length === 0
+    ) {
+      alert("변경사항이 없습니다.");
+      return;
+    }
+    try {
+      setDeletedIds([]);
+
+      for (const id of idsToProcess) {
+        await factoryApi.deletePlant(id);
       }
 
       for (const item of newItems) {
@@ -103,12 +155,14 @@ export default function FactoryManagementPage() {
       }
 
       alert("성공적으로 저장되었습니다.");
+
+      setDeletedIds([]);
       handleSearch();
     } catch (error: any) {
       console.error("저장 오류:", error);
       alert(`저장 실패: ${error.response?.data?.message || error.message}`);
     }
-  }, [rowData, handleSearch]);
+  }, [gridApi, deletedIds, handleSearch]);
 
   const gridOptions = useMemo(
     () => ({
@@ -174,7 +228,7 @@ export default function FactoryManagementPage() {
           <ActionBar
             onSearch={handleSearch}
             onAdd={handleAddRow}
-            onDelete={() => console.log("삭제")}
+            onDelete={handleDeleteRow}
             onSave={handleSave}
             onExcel={() => console.log("엑셀")}
           />
@@ -186,6 +240,7 @@ export default function FactoryManagementPage() {
           <CommonGrid<FactoryData>
             rowData={rowData}
             columnDefs={factoryColumnDefs}
+            onGridReady={onGridReady}
             onCellValueChanged={onCellValueChanged}
             gridOptions={{
               ...gridOptions,
