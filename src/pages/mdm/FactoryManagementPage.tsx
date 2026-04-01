@@ -77,17 +77,26 @@ export default function FactoryManagementPage() {
   }, []);
 
   const onCellValueChanged = useCallback((params: any) => {
-    if (!params.data.created_time) return;
-
     const normalize = (v: unknown) =>
       v === null || v === undefined ? "" : String(v);
-
     const oldVal = normalize(params.oldValue);
     const newVal = normalize(params.newValue);
 
     if (oldVal !== newVal) {
+    if (params.data.created_time) {
       params.data.isUpdated = true;
+      
+      if (!params.data.modifiedFields) {
+        params.data.modifiedFields = new Set();
+      }
+      params.data.modifiedFields.add(params.colDef.field);
     }
+
+    params.api.refreshCells({
+      rowNodes: [params.node],
+      force: true,
+    });
+  }
   }, []);
 
   const onGridReady = (params: any) => {
@@ -139,6 +148,7 @@ export default function FactoryManagementPage() {
       alert("변경사항이 없습니다.");
       return;
     }
+
     try {
       setDeletedIds([]);
 
@@ -151,7 +161,14 @@ export default function FactoryManagementPage() {
       }
 
       for (const item of updatedItems) {
-        await factoryApi.updatePlant(item);
+        const sanitizedItem = Object.fromEntries(
+          Object.entries(item).map(([key, value]) => [
+            key,
+            value === null || value === undefined ? "" : value,
+          ]),
+        );
+
+        await factoryApi.updatePlant(sanitizedItem as FactoryData);
       }
 
       alert("성공적으로 저장되었습니다.");
@@ -159,7 +176,7 @@ export default function FactoryManagementPage() {
       setDeletedIds([]);
       handleSearch();
     } catch (error: any) {
-      console.error("저장 오류:", error);
+      setDeletedIds(idsToProcess);
       alert(`저장 실패: ${error.response?.data?.message || error.message}`);
     }
   }, [gridApi, deletedIds, handleSearch]);
@@ -167,6 +184,12 @@ export default function FactoryManagementPage() {
   const gridOptions = useMemo(
     () => ({
       quickFilterText: gridSearch,
+      getRowClass: (params: any) => {
+        if (params.data && !params.data.created_time) {
+          return "row-new";
+        }
+        return undefined;
+      },
     }),
     [gridSearch],
   );
