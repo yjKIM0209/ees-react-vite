@@ -2,6 +2,18 @@
 import type { ColDef } from "ag-grid-community";
 import { UseYnBadge } from "../../../shared/components/table/UseYnBadge";
 
+const modifiedClassRule = {
+  'cell-modified': (params: any) => {
+    if (params.data?.created_time && params.data?.isUpdated) {
+      const modifiedFields = params.data.modifiedFields;
+      if (modifiedFields instanceof Set && modifiedFields.has(params.colDef.field)) {
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
 export interface FactoryData {
   plantId: string;
   plantNameKoKr: string;
@@ -51,24 +63,46 @@ export const factoryColumnDefs: ColDef<FactoryData>[] = [
     headerName: "공장 ID",
     width: 130,
     pinned: "left",
+    editable: (params) => {
+      if (!params.data) return false; 
+
+      const isNew = !params.data.creator || params.data.plantId === "";
+      return isNew;
+    },
+    cellStyle: (params) => {
+      if (!params.data) return null;
+
+      const isNew = !params.data.creator || params.data.plantId === "";
+      if (!isNew) {
+        return {
+          backgroundColor: "#f8fafc",
+          color: "#64748b",
+          cursor: "not-allowed",
+        };
+      }
+      return null;
+    },
   },
   {
     field: "plantNameKoKr",
     headerName: "공장명(한)",
     width: 150,
     editable: true,
+    cellClassRules: modifiedClassRule,
   },
   {
     field: "plantNameEnUs",
     headerName: "공장명(영)",
     width: 150,
     editable: true,
+    cellClassRules: modifiedClassRule,
   },
   {
     field: "validState",
     headerName: "유효 상태",
     width: 120,
     editable: true,
+    cellClassRules: modifiedClassRule,
     cellEditor: "agSelectCellEditor",
     cellEditorParams: { values: ["Valid", "Invalid"] },
     valueFormatter: (params) =>
@@ -76,9 +110,16 @@ export const factoryColumnDefs: ColDef<FactoryData>[] = [
     cellRenderer: UseYnBadge,
   },
   { field: "enterpriseId", headerName: "회사 ID", width: 120 },
-  { field: "phone", headerName: "전화번호", width: 130, editable: true },
-  { field: "address", headerName: "주소", width: 250, editable: true },
-  { field: "description", headerName: "설명", width: 200, editable: true },
+  { field: "phone", headerName: "전화번호", width: 130, editable: true, cellClassRules: modifiedClassRule, },
+  { field: "address", headerName: "주소", width: 250, editable: true, cellClassRules: modifiedClassRule, },
+  { field: "description", headerName: "설명", width: 200, editable: true, cellClassRules: modifiedClassRule, },
+  {
+    field: "startBusinessHour",
+    headerName: "시업 시간",
+    width: 150,
+    editable: true,
+    cellClassRules: modifiedClassRule,
+  },
   {
     field: "created_time",
     headerName: "생성일시",

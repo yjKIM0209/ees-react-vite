@@ -63,3 +63,12 @@
     font-family: "Geist Variable", sans-serif;
   }
 }
+
+.ag-theme-quartz .row-new {
+  background-color: #f0fdf4 !important;
+}
+
+.ag-theme-quartz .cell-modified {
+  background-color: #dcfce7 !important; 
+  font-weight: 500;
+}
