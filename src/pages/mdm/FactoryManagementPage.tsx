@@ -15,6 +15,7 @@ import {
   factoryColumnDefs,
   type FactoryData,
 } from "@/features/mdm/types/factory";
+import { GridHeader } from "@/shared/components/layout/GridHeader";
 
 export default function FactoryManagementPage() {
   const { title, breadcrumbs } = useCurrentMenu();
@@ -80,20 +81,20 @@ export default function FactoryManagementPage() {
     const newVal = normalize(params.newValue);
 
     if (oldVal !== newVal) {
-    if (params.data.created_time) {
-      params.data.isUpdated = true;
-      
-      if (!params.data.modifiedFields) {
-        params.data.modifiedFields = new Set();
-      }
-      params.data.modifiedFields.add(params.colDef.field);
-    }
+      if (params.data.created_time) {
+        params.data.isUpdated = true;
 
-    params.api.refreshCells({
-      rowNodes: [params.node],
-      force: true,
-    });
-  }
+        if (!params.data.modifiedFields) {
+          params.data.modifiedFields = new Set();
+        }
+        params.data.modifiedFields.add(params.colDef.field);
+      }
+
+      params.api.refreshCells({
+        rowNodes: [params.node],
+        force: true,
+      });
+    }
   }, []);
 
   const onGridReady = (params: any) => {
@@ -240,6 +241,7 @@ export default function FactoryManagementPage() {
       />
 
       <div className="flex-1 bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <GridHeader title={title} count={rowData.length} />
         <div className="flex-1">
           <CommonGrid<FactoryData>
             rowData={rowData}
@@ -253,14 +255,6 @@ export default function FactoryManagementPage() {
               stopEditingWhenCellsLoseFocus: true,
             }}
           />
-        </div>
-
-        <div className="h-8 border-t bg-slate-50 px-4 flex items-center text-xs text-slate-500">
-          Total:{" "}
-          <span className="font-bold text-slate-700 ml-1">
-            {rowData.length}
-          </span>{" "}
-          rows
         </div>
       </div>
     </PageShell>
