@@ -24,6 +24,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BottomTabBar } from "./shared/components/layout/BottomTabBar";
 import { useTabStore } from "./shared/store/useTabStore";
 import { useEffect } from "react";
+import { Toaster } from "sonner";
 
 const queryClient = new QueryClient();
 
@@ -120,6 +121,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <Toaster richColors position="top-center" />
         <AppContent />
       </BrowserRouter>
     </QueryClientProvider>
