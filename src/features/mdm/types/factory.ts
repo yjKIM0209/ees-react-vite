@@ -4,13 +4,10 @@ import { UseYnBadge } from "../../../shared/components/table/UseYnBadge";
 
 const modifiedClassRule = {
   'cell-modified': (params: any) => {
-    if (params.data?.created_time && params.data?.isUpdated) {
-      const modifiedFields = params.data.modifiedFields;
-      if (modifiedFields instanceof Set && modifiedFields.has(params.colDef.field)) {
-        return true;
-      }
-    }
-    return false;
+    return (
+      params.data?.rowStatus === "U" && 
+      params.data?.modifiedFields?.has(params.colDef.field)
+    );
   }
 };
 

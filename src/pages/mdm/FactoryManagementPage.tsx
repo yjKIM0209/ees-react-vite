@@ -7,7 +7,7 @@ import { ControlBar } from "@/shared/components/layout/ControlBar";
 import { ActionBar } from "@/shared/components/layout/ActionBar";
 import { useCurrentMenu } from "@/features/layout/hooks/useCurrentMenu";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { SearchPopover } from "@/shared/components/layout/SearchPopover";
 import { FactoryFilterForm } from "@/features/mdm/components/FactoryFilterForm";
 import CommonGrid from "@/shared/components/table/AgGrid";
@@ -16,41 +16,64 @@ import {
   type FactoryData,
 } from "@/features/mdm/types/factory";
 import { GridHeader } from "@/shared/components/layout/GridHeader";
+import { toast } from "sonner";
+// import {
+//   AlertDialog,
+//   AlertDialogAction,
+//   AlertDialogCancel,
+//   AlertDialogContent,
+//   AlertDialogDescription,
+//   AlertDialogFooter,
+//   AlertDialogHeader,
+//   AlertDialogTitle,
+// } from "@/components/ui/alert-dialog";
+
+type RowStatus = "C" | "U" | "D" | "N";
+
+interface ExtendedFactoryData extends FactoryData {
+  rowStatus?: RowStatus;
+  modifiedFields?: Set<string>;
+}
 
 export default function FactoryManagementPage() {
   const { title, breadcrumbs } = useCurrentMenu();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [gridSearch, setGridSearch] = useState("");
-  const [rowData, setRowData] = useState<FactoryData[]>([]);
+  const [rowData, setRowData] = useState<ExtendedFactoryData[]>([]);
   const [gridApi, setGridApi] = useState<any>(null);
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
-
+  const [isLoading, setIsLoading] = useState(false);
+  // const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [searchParams, setSearchParams] = useState({
     plantId: "",
     validState: "Valid",
   });
 
   const handleSearch = useCallback(async () => {
+    setIsLoading(true);
     try {
-      console.log("조회 요청 파라미터:", searchParams);
-
       const data = await factoryApi.searchPlants({
         plantId: searchParams.plantId || undefined,
         validState: searchParams.validState,
       });
 
-      const formattedData = Array.isArray(data) ? data : data ? [data] : [];
-      setRowData(formattedData);
+      const formattedData = (
+        Array.isArray(data) ? data : data ? [data] : []
+      ).map((item: any) => ({ ...item, rowStatus: "N" as RowStatus }));
 
+      setRowData(formattedData);
+      setDeletedIds([]);
       setIsPopoverOpen(false);
     } catch (error) {
       console.error("조회 중 오류 발생:", error);
-      alert("조회에 실패했습니다. 서버 상태를 확인하세요.");
+      toast.warning("조회에 실패했습니다. 서버 상태를 확인하세요.");
+    } finally {
+      setIsLoading(false);
     }
   }, [searchParams]);
 
   const handleAddRow = useCallback(() => {
-    const newRow: FactoryData = {
+    const newRow = {
       plantId: "", // 필수값
       plantNameKoKr: "",
       plantNameEnUs: "",
@@ -69,52 +92,44 @@ export default function FactoryManagementPage() {
       created_time: "",
       modifier: null,
       modified_time: null,
-    };
+      rowStatus: "C",
+    } as ExtendedFactoryData;
 
     setRowData((prev) => [newRow, ...prev]);
   }, []);
 
   const onCellValueChanged = useCallback((params: any) => {
-    const normalize = (v: unknown) =>
-      v === null || v === undefined ? "" : String(v);
-    const oldVal = normalize(params.oldValue);
-    const newVal = normalize(params.newValue);
+    const { data, oldValue, newValue, api, node, colDef } = params;
 
-    if (oldVal !== newVal) {
-      if (params.data.created_time) {
-        params.data.isUpdated = true;
+    if (oldValue !== newValue) {
+      if (data.rowStatus !== "C") {
+        data.rowStatus = "U";
 
-        if (!params.data.modifiedFields) {
-          params.data.modifiedFields = new Set();
+        if (!data.modifiedFields) {
+          data.modifiedFields = new Set();
         }
-        params.data.modifiedFields.add(params.colDef.field);
+        data.modifiedFields.add(colDef.field);
       }
 
-      params.api.refreshCells({
-        rowNodes: [params.node],
+      api.refreshCells({
+        rowNodes: [node],
+        columns: [colDef.field],
         force: true,
       });
     }
   }, []);
 
-  const onGridReady = (params: any) => {
-    setGridApi(params.api);
-  };
-
   const handleDeleteRow = useCallback(() => {
     if (!gridApi) return;
 
     const selectedRows = gridApi.getSelectedRows();
-    if (selectedRows.length === 0) {
-      alert("삭제할 행을 선택해주세요.");
-      return;
-    }
+    if (selectedRows.length === 0) return toast.error("삭제할 행을 선택해주세요.");
 
-    const idsToDelete = selectedRows
-      .filter((row: any) => row.created_time)
-      .map((row: any) => row.plantId);
+    const idsToTrack = selectedRows
+      .filter((row: ExtendedFactoryData) => row.rowStatus !== "C")
+      .map((row: ExtendedFactoryData) => row.plantId);
 
-    setDeletedIds((prev) => [...prev, ...idsToDelete]);
+    setDeletedIds((prev) => [...prev, ...idsToTrack]);
 
     const remainingRows = rowData.filter((row) => !selectedRows.includes(row));
     setRowData(remainingRows);
@@ -123,70 +138,72 @@ export default function FactoryManagementPage() {
   const handleSave = useCallback(async () => {
     if (!gridApi) return;
 
-    const allRows: FactoryData[] = [];
+    const allRows: ExtendedFactoryData[] = [];
     gridApi.forEachNode((node: any) => allRows.push(node.data));
 
-    const idsToProcess = [...deletedIds];
-    const newItems = allRows.filter((row) => !row.created_time);
-    const updatedItems = allRows.filter(
-      (row) => (row as any).isUpdated === true && row.plantId,
-    );
+    const createdItems = allRows.filter((row) => row.rowStatus === "C");
+    const updatedItems = allRows.filter((row) => row.rowStatus === "U");
 
-    const invalidItems = newItems.filter((row) => !row.plantId?.trim());
-    if (invalidItems.length > 0) {
-      alert(`공장 ID는 필수값입니다. (${invalidItems.length}건)`);
-      return;
-    }
+    const invalidItems = createdItems.filter((row) => !row.plantId?.trim());
+    if (invalidItems.length > 0) return toast.warning("공장 ID는 필수값입니다.");
 
     if (
-      idsToProcess.length === 0 &&
-      newItems.length === 0 &&
+      deletedIds.length === 0 &&
+      createdItems.length === 0 &&
       updatedItems.length === 0
     ) {
-      alert("변경사항이 없습니다.");
-      return;
+      return toast.warning("변경사항이 없습니다.");
     }
 
-    try {
-      setDeletedIds([]);
+    if (!confirm("변경사항을 저장하시겠습니까?")) return;
 
-      for (const id of idsToProcess) {
+    try {
+      setIsLoading(true);
+      for (const id of deletedIds) {
         await factoryApi.deletePlant(id);
       }
 
-      for (const item of newItems) {
-        await factoryApi.registerPlant(item);
+      for (const item of createdItems) {
+        const sanitizedItem = Object.fromEntries(
+          Object.entries(item).map(([key, value]) => [key, value ?? ""]),
+        );
+        await factoryApi.registerPlant(sanitizedItem as FactoryData);
       }
 
       for (const item of updatedItems) {
         const sanitizedItem = Object.fromEntries(
-          Object.entries(item).map(([key, value]) => [
-            key,
-            value === null || value === undefined ? "" : value,
-          ]),
+          Object.entries(item).map(([key, value]) => [key, value ?? ""]),
         );
-
         await factoryApi.updatePlant(sanitizedItem as FactoryData);
       }
 
-      alert("성공적으로 저장되었습니다.");
-
-      setDeletedIds([]);
+      toast.success("성공적으로 저장되었습니다.");
       handleSearch();
     } catch (error: any) {
-      setDeletedIds(idsToProcess);
-      alert(`저장 실패: ${error.response?.data?.message || error.message}`);
+      toast.error(`저장 실패: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   }, [gridApi, deletedIds, handleSearch]);
+
+  const onGridReady = (params: any) => setGridApi(params.api);
 
   const gridOptions = useMemo(
     () => ({
       quickFilterText: gridSearch,
       getRowClass: (params: any) => {
-        if (params.data && !params.data.created_time) {
-          return "row-new";
-        }
+        if (params.data?.rowStatus === "C") return "row-new";
         return undefined;
+      },
+      defaultColDef: {
+        cellClassRules: {
+          "cell-modified": (params: any) => {
+            return (
+              params.data?.rowStatus === "U" &&
+              params.data?.modifiedFields?.has(params.colDef.field)
+            );
+          },
+        },
       },
     }),
     [gridSearch],
@@ -194,6 +211,14 @@ export default function FactoryManagementPage() {
 
   return (
     <PageShell>
+      {isLoading && (
+        <div className="fixed inset-0 z-9999 flex items-center justify-center bg-white/50 backdrop-blur-[1px]">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="size-10 animate-spin text-primary" />
+            <p className="text-sm font-medium text-slate-600">처리 중...</p>
+          </div>
+        </div>
+      )}
       <PageHeader
         title={title}
         breadcrumbs={breadcrumbs}
@@ -201,7 +226,7 @@ export default function FactoryManagementPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
-              placeholder="그리드 내 결과 검색"
+              placeholder="결과 내 검색"
               value={gridSearch}
               onChange={(e) => setGridSearch(e.target.value)}
               className="w-72 pl-9 bg-slate-50 border-slate-300 focus:bg-white transition-all"
@@ -212,22 +237,20 @@ export default function FactoryManagementPage() {
 
       <ControlBar
         left={
-          <div className="flex items-center gap-2">
-            <SearchPopover
-              isOpen={isPopoverOpen}
-              onOpenChange={setIsPopoverOpen}
-              title={`${title} 조회 조건`}
-              onSearch={handleSearch}
-              width={320}
-            >
-              <FactoryFilterForm
-                values={searchParams}
-                onChange={(newValues) =>
-                  setSearchParams((prev) => ({ ...prev, ...newValues }))
-                }
-              />
-            </SearchPopover>
-          </div>
+          <SearchPopover
+            isOpen={isPopoverOpen}
+            onOpenChange={setIsPopoverOpen}
+            title={`${title} 조회 조건`}
+            onSearch={handleSearch}
+            width={320}
+          >
+            <FactoryFilterForm
+              values={searchParams}
+              onChange={(vals) =>
+                setSearchParams((prev) => ({ ...prev, ...vals }))
+              }
+            />
+          </SearchPopover>
         }
         right={
           <ActionBar
@@ -242,7 +265,7 @@ export default function FactoryManagementPage() {
       <div className="flex-1 bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col">
         <GridHeader title={title} count={rowData.length} />
         <div className="flex-1">
-          <CommonGrid<FactoryData>
+          <CommonGrid<ExtendedFactoryData>
             rowData={rowData}
             columnDefs={factoryColumnDefs}
             onGridReady={onGridReady}
