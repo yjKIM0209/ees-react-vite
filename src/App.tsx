@@ -25,6 +25,7 @@ import { BottomTabBar } from "./shared/components/layout/BottomTabBar";
 import { useTabStore } from "./shared/store/useTabStore";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
+import UIReferencePage from "./pages/reference/UIReferencePage";
 
 const queryClient = new QueryClient();
 
@@ -100,6 +101,7 @@ function AppContent() {
                 />
                 <Route path="/api-test" element={<EquipmentApiTest />} />
                 <Route path="/sample-master" element={<SampleManagementPage />} />
+                <Route path="/reference" element={<UIReferencePage />} />
               </Routes>
 
               {background && (
