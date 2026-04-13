@@ -4,6 +4,9 @@ import {
   FlaskConical,
   BarChart3,
   Database,
+  LayersPlus,
+  Grid2x2Plus,
+  Component,
 } from "lucide-react";
 import type { NavItem } from "../types/menu";
 
@@ -14,7 +17,7 @@ export const RAW_MENUS: NavItem[] = [
     icon: LayoutDashboard,
     role: ["admin", "user"],
   },
-  { name: "기준정보 예시", href: "/sample-master", icon: Database, role: ["admin"] },
+  { name: "기준정보 예시", href: "/sample-master", icon: LayersPlus, role: ["admin"] },
   {
     name: "기준 정보",
     icon: Database,
@@ -35,7 +38,7 @@ export const RAW_MENUS: NavItem[] = [
   },
   {
     name: "Grid 예시",
-    icon: Database,
+    icon: Grid2x2Plus,
     role: ["admin"],
     items: [
       { name: "이력 조회 (AG)", href: "/equipment-history" },
@@ -43,6 +46,7 @@ export const RAW_MENUS: NavItem[] = [
       { name: "무한 스크롤 이력", href: "/history-infinite" },
     ],
   },
+  { name: "UI Reference", href: "/reference", icon: Component, role: ["admin"] },
   {
     name: "API 테스트",
     href: "/api-test",
