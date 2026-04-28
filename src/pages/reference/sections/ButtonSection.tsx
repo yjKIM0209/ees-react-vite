@@ -44,7 +44,7 @@ const buttonGroupsCode = `
 
 export function ButtonSection() {
   return (
-    <div className="space-y-8">
+    <div id="button-section" className="space-y-8 scroll-mt-20">
       <h2 className="text-2xl font-bold tracking-tight border-l-4 border-primary pl-3">
         Buttons & Actions
       </h2>
