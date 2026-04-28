@@ -53,7 +53,7 @@ const cardCode = `
 
 export function NavDisplaySection() {
   return (
-    <div className="space-y-8">
+    <div id="nav-section" className="space-y-8 scroll-mt-20">
       <h2 className="text-2xl font-bold tracking-tight border-l-4 border-primary pl-3">
         Navigation & Display
       </h2>

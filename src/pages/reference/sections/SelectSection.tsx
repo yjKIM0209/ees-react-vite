@@ -59,7 +59,7 @@ const selectVariationsCode = `
 
 export function SelectSection() {
   return (
-    <div className="space-y-8">
+    <div id="select-section" className="space-y-8 scroll-mt-20">
         <h2 className="text-2xl font-bold tracking-tight border-l-4 border-primary pl-3">
           Select Elements
         </h2>
